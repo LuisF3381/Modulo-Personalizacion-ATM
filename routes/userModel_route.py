@@ -140,11 +140,13 @@ def get_perfil_by_id_user_model(id_user_model: int):
             idPerfilUsuario = perfil_data[0],
             descripcion = perfil_data[1],
             estado = bool(perfil_data[2]),
-            preferenciaTipografia = bool(perfil_data[3]),
-            preferenciaOpRapida1 = bool(perfil_data[4]),
-            preferenciaOpRapida2 = bool(perfil_data[5]),
-            preferenciaUltimaOp = bool(perfil_data[6]),
-            preferenciaRetiroRap = bool(perfil_data[7])
+            preferencias={
+                'preferenciaTipografia': bool(perfil_data[3]),
+                'preferenciaOpRapida1': bool(perfil_data[4]),
+                'preferenciaOpRapida2': bool(perfil_data[5]),
+                'preferenciaUltimaOp': bool(perfil_data[6]),
+                'preferenciaRetiroRap': bool(perfil_data[7])
+            }
         )
 
         return response_perfil
@@ -171,6 +173,7 @@ def update_perfil_informado(user_model_id: int, updated_data: UserModelUpdate):
         
         cursor.execute(query, values)
         conn.commit()
+        conn.close()
         
         return "Perfil informado actualizado"
 
@@ -198,6 +201,7 @@ def update_idioma_preferido(user_model_id: int, updated_data: UserModelUpdateIdi
 
         cursor.execute(query, values)
         conn.commit()
+        conn.close()
         
         return "Idioma preferido actualizado"
         

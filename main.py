@@ -3,6 +3,7 @@ from routes.perfil_route import perfil_r
 from routes.userModel_route import userModel_r
 from routes.obtieneRutas_route import obtieneRuta_r
 from routes.operacion import operacion_r
+from routes.algoritmo import algoritmo_r
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -12,6 +13,8 @@ app.include_router(perfil_r)
 app.include_router(userModel_r)
 app.include_router(obtieneRuta_r)
 app.include_router(operacion_r)
+app.include_router(algoritmo_r)
+
 
 # Configuración de CORS para permitir solicitudes desde http://localhost:3000
 app.add_middleware(

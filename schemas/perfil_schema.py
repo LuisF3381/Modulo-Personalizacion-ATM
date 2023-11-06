@@ -22,12 +22,17 @@ class Perfil_Lectura(BaseModel):
     preferenciaRetiroRap: bool
     
 # Modelo Pydantic para representar la respuesta del perfil
-class PerfilResponse(BaseModel):
-    idPerfilUsuario: int
-    descripcion: str
-    estado: bool
+
+class Preferencias(BaseModel):
     preferenciaTipografia: bool
     preferenciaOpRapida1: bool
     preferenciaOpRapida2: bool
     preferenciaUltimaOp: bool
     preferenciaRetiroRap: bool
+
+class PerfilResponse(BaseModel):
+    idPerfilUsuario: int
+    descripcion: str
+    estado: bool
+    preferencias: Preferencias
+    
