@@ -27,3 +27,8 @@ class PerfilInformadoResponse(BaseModel):
 class UserModelUpdate(BaseModel):
     perfil_informado: bool
     
+
+# Modelo Pydantic para la actualizacion del idioma del userModel
+class UserModelUpdateIdioma(BaseModel):
+    idiomaPreferido: str
+

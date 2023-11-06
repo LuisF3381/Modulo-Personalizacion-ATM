@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from schemas.userModel_schema import UserModelCreate, UserModelListado, UserModelUpdate, PerfilInformadoResponse
+from schemas.userModel_schema import UserModelCreate, UserModelListado, UserModelUpdate, PerfilInformadoResponse, UserModelUpdateIdioma
 from schemas.perfil_schema import PerfilResponse
 
 import MySQLdb
@@ -111,33 +111,6 @@ def get_user_model(user_model_id: int):
         print(e)
         raise HTTPException(status_code=500, detail="Error en el servidor")
 
-
-# Ruta para actualizar la columna perfil_informado de un user_model por su idUserModel
-@userModel_r.put("/user-model/{user_model_id}/update-perfil-informado")
-def update_perfil_informado(user_model_id: int, updated_data: UserModelUpdate):
-    try:
-        # Create a connection to the database
-        conn = MySQLdb.connect(**db_config)   
-        cursor = conn.cursor()
-        
-        # Actualizar la columna perfil_informado del user_model por su idUserModel
-        query = """
-            UPDATE user_model
-            SET perfil_informado = %s
-            WHERE idUserModel = %s
-        """
-        values = (updated_data.perfil_informado, user_model_id)
-        
-        cursor.execute(query, values)
-        conn.commit()
-        
-        return "Perfil informado actualizado"
-
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Error en el servidor")
-
-
 @userModel_r.get("/user-model/{id_user_model}/perfil", response_model=PerfilResponse)
 def get_perfil_by_id_user_model(id_user_model: int):
     try:
@@ -179,3 +152,83 @@ def get_perfil_by_id_user_model(id_user_model: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error en el servidor")
 
+
+# Ruta para actualizar la columna perfil_informado de un user_model por su idUserModel
+@userModel_r.put("/user-model/{user_model_id}/update-perfil-informado")
+def update_perfil_informado(user_model_id: int, updated_data: UserModelUpdate):
+    try:
+        # Create a connection to the database
+        conn = MySQLdb.connect(**db_config)   
+        cursor = conn.cursor()
+        
+        # Actualizar la columna perfil_informado del user_model por su idUserModel
+        query = """
+            UPDATE user_model
+            SET perfil_informado = %s
+            WHERE idUserModel = %s
+        """
+        values = (updated_data.perfil_informado, user_model_id)
+        
+        cursor.execute(query, values)
+        conn.commit()
+        
+        return "Perfil informado actualizado"
+
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error en el servidor")
+    
+    
+    
+# Ruta para actualizar el idioma seleccionado por el usuario
+@userModel_r.put("/user-model/{user_model_id}/update-idioma")
+def update_idioma_preferido(user_model_id: int, updated_data: UserModelUpdateIdioma):
+    try:
+        # Create a connection to the database
+        conn = MySQLdb.connect(**db_config)   
+        cursor = conn.cursor()
+        
+        # Actualizar la columna idioma del user_model por su idUserModel
+        query = """
+            UPDATE user_model
+            SET idiomaPreferido = %s
+            WHERE idUserModel = %s
+        """
+        values = (updated_data.idiomaPreferido, user_model_id)
+
+        cursor.execute(query, values)
+        conn.commit()
+        
+        return "Idioma preferido actualizado"
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error en el servidor")
+    
+
+# Api que devuelve el idUsuario que pertenece al userModel
+@userModel_r.get("/user-model/by-id-user-model/{id_user_model}")
+def get_user_id_by_user_model(id_user_model: int):
+    try:
+        # Crear una conexión a la base de datos
+        conn = MySQLdb.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Consultar el registro de user_model por su idUserModel
+        query = """
+            SELECT idUsuario FROM user_model WHERE idUserModel = %s
+        """
+        
+        cursor.execute(query, (id_user_model,))
+        user_id = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        if user_id is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Devolver el idUsuario como un diccionario
+        return {"idUsuario": user_id[0]}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error en el servidor")
