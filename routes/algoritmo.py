@@ -34,6 +34,9 @@ def actualiza_user_model(user_model_id: int):
             # Revisamos el retiro rapido al ser perfil ocasional
             if preferencia == "preferenciaRetiroRap" and valor:
                 calcula_retiro_rapido(user_model_id)
+                
+            if preferencia == "preferenciaOpRapida1" and valor:
+                calcula_op_rapida1(user_model_id)
     
         return "Perfil Cliente Ocasional Actualizado"
     
@@ -46,6 +49,105 @@ def actualiza_user_model(user_model_id: int):
     return perfil
     
     return {"mensaje": "User Model correctamente actualizado"}
+
+
+# PARA CONSULTAR LA OPERACION RAPIDA 1
+def visualizar_op_rapida1(user_model_id: int):
+    try:
+        # Create a connection to the database
+        conn = MySQLdb.connect(**db_config)   
+        cursor = conn.cursor()
+        
+        # Consulta SQL
+        query = """
+        SELECT
+        tipoOperacion,
+        montOperacion,
+        constOperacion,
+        cuentaDestino,
+        moneda
+        FROM operation_model
+        WHERE user_model_id = %s
+        AND descripcion = 'OpRapida1'
+        AND activo = 1;
+        """
+        
+        cursor.execute(query, (user_model_id,))
+        result = cursor.fetchone()        
+        
+        if result:
+            # Convertir el resultado a un diccionario para devolverlo como JSON
+            column_names = [desc[0] for desc in cursor.description]
+            result_dict_model_op = dict(zip(column_names, result))
+            conn.close()
+            
+            return result_dict_model_op
+        else:
+            conn.close()
+            return -1
+
+    except Exception as e:
+        print(e)   
+
+
+    return -1
+
+
+# PARA CALCULAR UNA OPERACION RAPIDA 1
+def calcula_op_rapida1(user_model_id: int):
+    try:
+        # Create a connection to the database
+        conn = MySQLdb.connect(**db_config)   
+        cursor = conn.cursor()
+        
+        # Consulta SQL
+        query = """
+        SELECT 
+            tipoOperacion,
+            montOperacion,
+            constOperacion,
+            cuentaDestino,
+            moneda,
+            COUNT(*) as repeticiones
+        FROM operacion
+        WHERE user_model_id = %s
+        GROUP BY 
+            tipoOperacion,
+            montOperacion,
+            constOperacion,
+            cuentaDestino,
+            moneda
+        ORDER BY repeticiones DESC
+        LIMIT 1;
+        """
+        
+        cursor.execute(query, (user_model_id,))
+        result = cursor.fetchone()
+
+        if result:
+            # Convertir el resultado a un diccionario para devolverlo como JSON
+            column_names = [desc[0] for desc in cursor.description]
+            result_dict_model_op = dict(zip(column_names, result))
+                        
+            operacion_nombre = result_dict_model_op.get('tipoOperacion', '')
+            result_ver_rp1 = visualizar_op_rapida1(user_model_id)
+
+            son_diferentes = objetos_diferentes(result_dict_model_op, result_ver_rp1)
+
+            if son_diferentes:
+                # Se procede a realizar la insercion
+                resulto_insertado = insertar_en_operation_model_y_desactivar(result_dict_model_op, "OpRapida1", user_model_id, operacion_nombre)
+            
+            conn.close()
+        else:
+            conn.close()
+            return -1
+        
+    except Exception as e:
+        print(e)   
+    
+    return -1
+
 
 
 # PARA LA ULTIMA OPERACION
@@ -125,10 +227,15 @@ def calcula_retiro_rapido(user_model_id: int):
             #print("Resultado de ultimas 3 operaciones",result_3_ult_retiros)
             
             if result_3_ult_retiros != -1:
-                result_actualizacion = insertar_en_operation_model_y_desactivar(result_3_ult_retiros, "RetiroRap", user_model_id, "Retiro")
+                son_diferentes = objetos_diferentes(result_dict_model_op, result_3_ult_retiros)
+                # Aqui insertamos o no el objeto
+                if son_diferentes:    
+                    result_actualizacion = insertar_en_operation_model_y_desactivar(result_3_ult_retiros, "RetiroRap", user_model_id, "Retiro")
+            
             else:
                 # Comparamos el operation model actual con el mas empleado
                 print("Aqui deberia ir la logica")
+                print(result_dict_model_op, result_retiro_mas_usado)
                 son_diferentes = objetos_diferentes(result_dict_model_op, result_retiro_mas_usado)
             
                 # Aqui insertamos o no el objeto
