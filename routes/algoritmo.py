@@ -31,7 +31,8 @@ def actualiza_user_model(user_model_id: int):
             if preferencia == "preferenciaOpRapida2" and valor:
                 calcula_op_rapida2(user_model_id)
         
-        
+        # Cambiamos la referencia a los operation model
+        enlaza_operation_model(user_model_id)
         return "Perfil Cliente Frecuente Actualizado"
     
     if perfil.descripcion == "Perfil Cliente Ocasional":        
@@ -46,7 +47,9 @@ def actualiza_user_model(user_model_id: int):
                 
             if preferencia == "preferenciaOpRapida1" and valor:
                 calcula_op_rapida1(user_model_id)
-    
+        
+        # Cambiamos la referencia a los operation model
+        enlaza_operation_model(user_model_id)
         return "Perfil Cliente Ocasional Actualizado"
     
     if perfil.descripcion == "Perfil Cliente Senior":
@@ -58,13 +61,98 @@ def actualiza_user_model(user_model_id: int):
             
             if preferencia == "preferenciaOpRapida1" and valor:
                 calcula_op_rapida1(user_model_id)
-                
+        
+        # Cambiamos la referencia a los operation model
+        enlaza_operation_model(user_model_id)        
         return "Perfil Cliente Senior Actualizado"
     
     
     return perfil
     
     return {"mensaje": "User Model correctamente actualizado"}
+
+
+# Funcion que actualiza los user model
+def enlaza_operation_model(user_model_id: int):
+    try:
+        # Primero probamos si tiener OpRapida1
+        aux = obtiene_Op_Generico(user_model_id, "OpRapida1")
+        # Ahora hacemos update
+        if aux != -1:
+            update_Op_Generico(user_model_id, "OpRapida1", aux)
+            
+        # Primero probamos si tiener OpRapida2
+        aux = obtiene_Op_Generico(user_model_id, "OpRapida2")  
+        # Ahora hacemos update
+        if aux != -1:
+            update_Op_Generico(user_model_id, "OpRapida2", aux)
+
+        # Primero probamos si tiener UltimaOp
+        aux = obtiene_Op_Generico(user_model_id, "UltimaOp")  
+        # Ahora hacemos update
+        if aux != -1:
+            update_Op_Generico(user_model_id, "ultOp", aux)
+
+        # Primero probamos si tiener RetiroRap
+        aux = obtiene_Op_Generico(user_model_id, "RetiroRap")  
+        # Ahora hacemos update
+        if aux != -1:
+            update_Op_Generico(user_model_id, "opRetRapido", aux)
+
+
+    except Exception as e:
+        print(e)   
+    return -1
+
+# Obtiene OpRapida1
+def obtiene_Op_Generico(user_model_id: int, nombre_op):
+    try:
+        # Create a connection to the database
+        conn = MySQLdb.connect(**db_config)   
+        cursor = conn.cursor()
+        
+        # Consulta SQL
+        query = """
+        SELECT idOperationModel
+        FROM operation_model
+        WHERE user_model_id = %s
+        AND descripcion = %s
+        AND activo = 1;
+        """
+        
+        cursor.execute(query, (user_model_id, nombre_op))
+        result = cursor.fetchone()   
+        
+        if result:
+            return result[0]
+        else:
+            return -1
+        
+    except Exception as e:
+        print(e)   
+    return -1
+
+# Setea userModel generico
+def update_Op_Generico(user_model_id: int, nombre_op, idop):
+    try:
+        # Crear una conexión a la base de datos
+        conn = MySQLdb.connect(**db_config)
+        cursor = conn.cursor()     
+    
+        query = f"UPDATE user_model SET {nombre_op} = %s WHERE idUserModel = %s"
+        cursor.execute(query, (idop, user_model_id))
+        
+        conn.commit()
+        
+        # Cerramos la conexion a bd
+        cursor.close()
+        conn.close()
+        
+        return 0
+    except Exception as e:
+        print(e)   
+    return -1
+
 
 # PARA CONSULTAR LA OPERACION RAPIDA 2
 def visualizar_op_rapida2(user_model_id: int):
@@ -95,7 +183,7 @@ def visualizar_op_rapida2(user_model_id: int):
             column_names = [desc[0] for desc in cursor.description]
             result_dict_model_op = dict(zip(column_names, result))
             conn.close()
-            
+            #print(result_dict_model_op)
             return result_dict_model_op
         else:
             conn.close()
