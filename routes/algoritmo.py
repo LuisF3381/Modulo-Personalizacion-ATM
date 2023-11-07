@@ -22,6 +22,9 @@ def actualiza_user_model(user_model_id: int):
             # Revisamos la ultima transaccion
             if preferencia == "preferenciaUltimaOp" and valor:
                 calcula_ultima_operacion(user_model_id)
+                
+            # Revisamos las primera y segunda operacion rapida
+            
         
         return "Perfil Cliente Frecuente Actualizado"
     
@@ -41,7 +44,16 @@ def actualiza_user_model(user_model_id: int):
         return "Perfil Cliente Ocasional Actualizado"
     
     if perfil.descripcion == "Perfil Cliente Senior":
-        return "GEEE"
+        # Revisamos las acciones personalizables
+        preferencias = perfil.preferencias
+        
+        # Iteramos sobre las preferencias y llamamos a la funcion de calculo correspondiente
+        for preferencia, valor in preferencias.dict().items():
+            
+            if preferencia == "preferenciaOpRapida1" and valor:
+                calcula_op_rapida1(user_model_id)
+                
+        return "Perfil Cliente Senior Actualizado"
     
     
     
@@ -128,14 +140,18 @@ def calcula_op_rapida1(user_model_id: int):
             # Convertir el resultado a un diccionario para devolverlo como JSON
             column_names = [desc[0] for desc in cursor.description]
             result_dict_model_op = dict(zip(column_names, result))
-                        
+            
             operacion_nombre = result_dict_model_op.get('tipoOperacion', '')
             result_ver_rp1 = visualizar_op_rapida1(user_model_id)
+            
+            # Si no existe opr1 entonces se inserta directamente
+            if result_ver_rp1 != -1:
+                son_diferentes = objetos_diferentes(result_dict_model_op, result_ver_rp1)
 
-            son_diferentes = objetos_diferentes(result_dict_model_op, result_ver_rp1)
-
-            if son_diferentes:
-                # Se procede a realizar la insercion
+                if son_diferentes:
+                    # Se procede a realizar la insercion
+                    resulto_insertado = insertar_en_operation_model_y_desactivar(result_dict_model_op, "OpRapida1", user_model_id, operacion_nombre)
+            else:
                 resulto_insertado = insertar_en_operation_model_y_desactivar(result_dict_model_op, "OpRapida1", user_model_id, operacion_nombre)
             
             conn.close()
