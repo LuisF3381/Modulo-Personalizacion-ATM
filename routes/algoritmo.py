@@ -23,8 +23,14 @@ def actualiza_user_model(user_model_id: int):
             if preferencia == "preferenciaUltimaOp" and valor:
                 calcula_ultima_operacion(user_model_id)
                 
-            # Revisamos las primera y segunda operacion rapida
+            # Revisamos las primera operacion rapida
+            if preferencia == "preferenciaOpRapida1" and valor:
+                calcula_op_rapida1(user_model_id)
             
+            # Revisamos las primera operacion rapida
+            if preferencia == "preferenciaOpRapida2" and valor:
+                calcula_op_rapida2(user_model_id)
+        
         
         return "Perfil Cliente Frecuente Actualizado"
     
@@ -56,12 +62,98 @@ def actualiza_user_model(user_model_id: int):
         return "Perfil Cliente Senior Actualizado"
     
     
-    
-    
     return perfil
     
     return {"mensaje": "User Model correctamente actualizado"}
 
+# PARA CONSULTAR LA OPERACION RAPIDA 2
+def visualizar_op_rapida2(user_model_id: int):
+    try:
+        # Create a connection to the database
+        conn = MySQLdb.connect(**db_config)   
+        cursor = conn.cursor()
+    
+        # Consulta SQL
+        query = """
+        SELECT
+        tipoOperacion,
+        montOperacion,
+        constOperacion,
+        cuentaDestino,
+        moneda
+        FROM operation_model
+        WHERE user_model_id = %s
+        AND descripcion = 'OpRapida2'
+        AND activo = 1;
+        """
+        
+        cursor.execute(query, (user_model_id,))
+        result = cursor.fetchone()     
+    
+        if result:
+            # Convertir el resultado a un diccionario para devolverlo como JSON
+            column_names = [desc[0] for desc in cursor.description]
+            result_dict_model_op = dict(zip(column_names, result))
+            conn.close()
+            
+            return result_dict_model_op
+        else:
+            conn.close()
+            return -1
+    
+    except Exception as e:
+        print(e)   
+
+    return -1
+
+# PARA CALCULAR OPERACION RAPIDA 2
+def calcula_op_rapida2(user_model_id: int):
+    try:
+        # Create a connection to the database
+        conn = MySQLdb.connect(**db_config)   
+        cursor = conn.cursor()
+        
+        # Consulta SQL
+        query = """
+        SELECT tipoOperacion, montOperacion, constOperacion, cuentaDestino, moneda, COUNT(*) as repeticiones
+        FROM operacion
+        WHERE user_model_id = %s
+        GROUP BY tipoOperacion, montOperacion, constOperacion, cuentaDestino, moneda
+        ORDER BY repeticiones DESC
+        LIMIT 1 OFFSET 1;
+        """
+    
+        cursor.execute(query, (user_model_id,))
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            # Convertir el resultado a un diccionario para devolverlo como JSON
+            column_names = [desc[0] for desc in cursor.description]
+            result_dict_model_op = dict(zip(column_names, result))
+            #print(result_dict_model_op)
+            operacion_nombre = result_dict_model_op.get('tipoOperacion', '')
+            result_ver_rp2 = visualizar_op_rapida2(user_model_id)
+        
+                        # Si no existe opr1 entonces se inserta directamente
+            if result_ver_rp2 != -1:
+                son_diferentes = objetos_diferentes(result_dict_model_op, result_ver_rp2)
+
+                if son_diferentes:
+                    # Se procede a realizar la insercion
+                    resulto_insertado = insertar_en_operation_model_y_desactivar(result_dict_model_op, "OpRapida2", user_model_id, operacion_nombre)
+            else:
+                resulto_insertado = insertar_en_operation_model_y_desactivar(result_dict_model_op, "OpRapida2", user_model_id, operacion_nombre)
+            
+            conn.close()
+        else:
+            conn.close()
+            return -1
+        
+    except Exception as e:
+        print(e)   
+
+    return -1
 
 # PARA CONSULTAR LA OPERACION RAPIDA 1
 def visualizar_op_rapida1(user_model_id: int):
@@ -189,7 +281,7 @@ def calcula_ultima_operacion(user_model_id: int):
             # Convertir el resultado a un diccionario para devolverlo como JSON
             column_names = [desc[0] for desc in cursor.description]
             result_dict_model_op = dict(zip(column_names, result))
-            print(result_dict_model_op)
+
             operacion_nombre= result_dict_model_op.get('tipoOperacion', '')
             # Se procede a realizar la insercion
             resulto_insertado = insertar_en_operation_model_y_desactivar(result_dict_model_op, "UltimaOp", user_model_id, operacion_nombre)
