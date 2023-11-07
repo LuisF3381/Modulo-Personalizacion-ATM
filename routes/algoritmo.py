@@ -15,7 +15,15 @@ def actualiza_user_model(user_model_id: int):
     
     # Vemos de que perfil se trata con el fin de poder iniciar la rutina algoritmica correspondiente
     if perfil.descripcion == "Perfil Cliente Frecuente":
-        return "GAAAA"
+        # Revisamos las acciones personalizables
+        preferencias = perfil.preferencias
+        
+        for preferencia, valor in preferencias.dict().items():
+            # Revisamos la ultima transaccion
+            if preferencia == "preferenciaUltimaOp" and valor:
+                calcula_ultima_operacion(user_model_id)
+        
+        return "Perfil Cliente Frecuente Actualizado"
     
     if perfil.descripcion == "Perfil Cliente Ocasional":        
         # Revisamos las acciones personalizables
@@ -25,11 +33,8 @@ def actualiza_user_model(user_model_id: int):
         for preferencia, valor in preferencias.dict().items():
             # Revisamos el retiro rapido al ser perfil ocasional
             if preferencia == "preferenciaRetiroRap" and valor:
-                print(f"{preferencia}: {valor}")
                 calcula_retiro_rapido(user_model_id)
-        
-
-        
+    
         return "Perfil Cliente Ocasional Actualizado"
     
     if perfil.descripcion == "Perfil Cliente Senior":
@@ -41,6 +46,44 @@ def actualiza_user_model(user_model_id: int):
     return perfil
     
     return {"mensaje": "User Model correctamente actualizado"}
+
+
+# PARA LA ULTIMA OPERACION
+def calcula_ultima_operacion(user_model_id: int):
+    try:
+        # Create a connection to the database
+        conn = MySQLdb.connect(**db_config)   
+        cursor = conn.cursor()
+        
+        # Consulta SQL
+        query = """
+            SELECT *
+            FROM operacion
+            WHERE user_model_id = %s
+            ORDER BY fechaOperacion DESC
+            LIMIT 1;
+        """
+        
+        cursor.execute(query, (user_model_id,))
+        result = cursor.fetchone()
+        
+        if result:
+            # Convertir el resultado a un diccionario para devolverlo como JSON
+            column_names = [desc[0] for desc in cursor.description]
+            result_dict_model_op = dict(zip(column_names, result))
+            print(result_dict_model_op)
+            operacion_nombre= result_dict_model_op.get('tipoOperacion', '')
+            # Se procede a realizar la insercion
+            resulto_insertado = insertar_en_operation_model_y_desactivar(result_dict_model_op, "UltimaOp", user_model_id, operacion_nombre)
+            conn.close()
+        else:
+            conn.close()
+            return -1
+            
+    except Exception as e:
+        print(e)    
+
+    return -1 
 
 
 
