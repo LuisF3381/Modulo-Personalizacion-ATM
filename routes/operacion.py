@@ -61,7 +61,7 @@ def get_operacion_by_id(idOperacion: int):
 
         # Consultar la operación por su idOperacion
         query = """
-                SELECT * FROM operacion WHERE idOperacion = %s
+                SELECT * FROM operacion WHERE idOperacion = %s;
             """
         cursor.execute(query, (idOperacion,))
         

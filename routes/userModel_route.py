@@ -90,7 +90,7 @@ def get_user_model(user_model_id: int):
         
         if user_model_data is None:
             raise HTTPException(status_code=404, detail="User Model not found")
-        
+        print(user_model_data[9])
         # Crear un objeto UserModel para la respuesta
         response_user_model = UserModelListado(
             idUserModel = user_model_data[0],
@@ -101,8 +101,8 @@ def get_user_model(user_model_id: int):
             opRapida2 = user_model_data[5],
             opRetRapido = user_model_data[6],
             ultOp = user_model_data[7],
-            perfil_informado = bool(user_model_data[8]),
-            perfil_id = user_model_data[9]
+            perfil_id = user_model_data[8],
+            perfil_informado = bool(user_model_data[9]),
         )
 
         return response_user_model    
