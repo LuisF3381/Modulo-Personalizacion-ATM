@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 import MySQLdb
 from config.db import db_config
+from routes.operation_model import get_operacion_model_by_id
 
 obtieneRuta_r = APIRouter()
 
@@ -46,3 +47,30 @@ def get_obtener_ruta_post_login(user_model_id: int):
         raise HTTPException(status_code=500, detail="Error en el servidor")
     
     
+
+# Ruta para obtener ruta que sigue para una operacion
+@obtieneRuta_r.get("/obtener-ruta/operacion/")
+def get_route_operacion(idOperationModel: int, idUsuario: int):
+    
+    try:
+        # Primero obtenemos el operation model 
+        response = get_operacion_model_by_id(idOperationModel)
+
+        # Primero obtendremos el tipo de operacion que se esta realizando
+        tipo_operacion = response["tipoOperacion"]
+        if tipo_operacion == "Retiro":
+            url = "/retiro/seleccion-monto/{}/{}/{}/{}?".format(response["user_model_id"], response["cuentaDestino"], response["moneda"], response["idOperationModel"])
+
+        if tipo_operacion == "Consulta":
+            # /consulta/seleccion-cuenta/:idUsuario/:idUserModel/:idOperation?
+            url = "/consulta/seleccion-cuenta/{}/{}/{}?".format(idUsuario, response["user_model_id"], response["idOperationModel"])
+
+        if tipo_operacion == "Deposito":
+            #"/deposito/ingreso-billetes/:idUserModel/:CCI/:moneda/:idOperation?"
+            url = "/deposito/ingreso-billetes/{}/{}/{}/{}?".format(response["user_model_id"], response["cuentaDestino"], response["moneda"], response["idOperationModel"])
+
+        return url
+            
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Error en el servidor")
