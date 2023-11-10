@@ -17,8 +17,8 @@ def create_user_model(user_model_create: UserModelCreate):
 
         # Insertar un nuevo registro en la tabla user_model
         query = """
-                INSERT INTO user_model (idUsuario, perfil_informado, perfil_id)
-                VALUES (%s, %s, %s)
+                INSERT INTO user_model (idUsuario, perfil_informado, perfil_id, tamFuente)
+                VALUES (%s, %s, %s, 13)
             """    
             
         values = (
@@ -208,6 +208,30 @@ def update_idioma_preferido(user_model_id: int, updated_data: UserModelUpdateIdi
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error en el servidor")
     
+# Api que actualiza el tamaño de letra
+@userModel_r.put("/user-model/update-tipografia")
+def update_tipografia_preferido(user_model_id: int, tam_letra:int):
+    try:
+        # Create a connection to the database
+        conn = MySQLdb.connect(**db_config)   
+        cursor = conn.cursor()
+        
+        # Actualizar la columna idioma del user_model por su idUserModel
+        query = """
+            UPDATE user_model
+            SET tamFuente = %s
+            WHERE idUserModel = %s
+        """
+        values = (tam_letra, user_model_id)
+
+        cursor.execute(query, values)
+        conn.commit()
+        conn.close()
+
+        return "Tipografia preferida actualizado"
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error en el servidor")
+
 
 # Api que devuelve el idUsuario que pertenece al userModel
 @userModel_r.get("/user-model/by-id-user-model/{id_user_model}")
