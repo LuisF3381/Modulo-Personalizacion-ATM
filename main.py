@@ -21,7 +21,7 @@ app.include_router(operation_model_r)
 # Configuración de CORS para permitir solicitudes desde http://localhost:3000
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET", "PUT", "POST"],
     allow_headers=["*"],
