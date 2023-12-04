@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-# Modelo Pydantic para la creación de un user_model
+# Modelo Pydantic para la creación de un user_model a
 class UserModelCreate(BaseModel):
     idUsuario: int
     perfil_id: int
