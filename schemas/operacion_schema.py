@@ -13,3 +13,9 @@ class OperacionCreate(BaseModel):
     user_model_id: int 
     
 
+# Modelo de datos simplificado para la creación de la métrica
+class MetricaCreate(BaseModel):
+    descripcion: str
+    tiempoUsoPantalla: int
+    fechaMetrica: datetime
+    user_model_id: int

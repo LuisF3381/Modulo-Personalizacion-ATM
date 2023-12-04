@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from schemas.userModel_schema import UserModelCreate, UserModelListado, UserModelUpdate, PerfilInformadoResponse, UserModelUpdateIdioma
-from schemas.operacion_schema import OperacionCreate
+from schemas.operacion_schema import OperacionCreate, MetricaCreate
 
 import MySQLdb
 from config.db import db_config
@@ -124,5 +124,38 @@ def update_const_operacion(idOperacion: int, const_operacion_update: str):
         raise HTTPException(status_code=500, detail="Error en el servidor")
 
 
+@operacion_r.post("/operacion_tiempo/insert")
+def insert_metrica(metrica_create: MetricaCreate):
+    try:
+        # Crear una conexión a la base de datos
+        conn = MySQLdb.connect(**db_config)
+        cursor = conn.cursor()
 
+        # Insertar un nuevo registro en la tabla de métricas
+        query = """
+                INSERT INTO MetricasXPantalla (
+                    descripcion, tiempoUsoPantalla, fechaMetrica, user_model_id
+                )
+                VALUES (%s, %s, %s, %s)
+            """
+
+        values = (
+            metrica_create.descripcion,
+            metrica_create.tiempoUsoPantalla,
+            metrica_create.fechaMetrica,
+            metrica_create.user_model_id
+        )
+
+        cursor.execute(query, values)
+        conn.commit()
+
+        # Obtener el ID generado para el nuevo registro
+        new_record_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
+
+        return {"idMetrica": new_record_id}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error en el servidor")
 
